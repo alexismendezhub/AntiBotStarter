@@ -1,0 +1,23 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path="Directory.Build.props" />
+    <File Path="global.json" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/AntiBotStarter.Application/AntiBotStarter.Application.csproj" />
+    <Project Path="src/AntiBotStarter.Domain/AntiBotStarter.Domain.csproj" />
+    <Project Path="src/AntiBotStarter.Infrastructure/AntiBotStarter.Infrastructure.csproj" />
+    <Project Path="src/AntiBotStarter.Server/AntiBotStarter.Server.csproj" />
+    <Project Path="src/antibotstarter.client/antibotstarter.client.esproj">
+      <Build />
+      <Deploy />
+    </Project>
+  </Folder>
+  <Folder Name="/src/tests/">
+    <Project Path="src/tests/AntiBotStarter.Application.UnitTests/AntiBotStarter.Application.UnitTests.csproj" />
+    <Project Path="src/tests/AntiBotStarter.Infrastructure.UnitTests/AntiBotStarter.Infrastructure.UnitTests.csproj" />
+    <Project Path="src/tests/AntiBotStarter.Server.IntegrationTests/AntiBotStarter.Server.IntegrationTests.csproj" />
+  </Folder>
+</Solution>

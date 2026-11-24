@@ -1,0 +1,20 @@
+@host = https://localhost:7180
+
+### Public configuration
+GET {{host}}/api/config
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/130.0 Safari/537.36
+
+### robots.txt
+GET {{host}}/robots.txt
+
+### Scraper User-Agent → 403
+GET {{host}}/api/config
+User-Agent: python-requests/2.32.0
+
+### Fake Googlebot → 403
+GET {{host}}/api/config
+User-Agent: Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)
+
+### Anti-crawler trap → 404 and your IP gets blocked (restart the app to unblock)
+GET {{host}}/_internal/archive
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/130.0 Safari/537.36

@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>AntiBotStarter</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Anti-indexing. The server also sends X-Robots-Tag. Remove it if AllowSearchEngines = true. -->
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+</head>
+<body>
+  <app-root></app-root>
+  <noscript>This application requires JavaScript.</noscript>
+  <!--
+    Anti-crawler trap for bots that do NOT run JavaScript (they read the raw HTML).
+    Invisible and out of the tab order for humans and screen readers;
+    the path is Disallowed in robots.txt. Must match AntiBot:CrawlerTrap:Path.
+  -->
+  <a href="/_internal/archive" rel="nofollow noopener" tabindex="-1" aria-hidden="true" class="trap-link">archive</a>
+</body>
+</html>

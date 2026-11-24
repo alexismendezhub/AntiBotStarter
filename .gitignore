@@ -1,0 +1,23 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+TestResults/
+*.db
+*.db-shm
+*.db-wal
+appsettings.*.local.json
+
+## Angular
+src/antibotstarter.client/node_modules/
+src/antibotstarter.client/dist/
+src/antibotstarter.client/.angular/
+src/antibotstarter.client/out-tsc/
+src/antibotstarter.client/coverage/
+
+## Publish
+src/AntiBotStarter.Server/wwwroot/
+publish/
+artifacts/

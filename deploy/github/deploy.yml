@@ -1,0 +1,66 @@
+# TEMPLATE — copy to .github/workflows/deploy.yml to use it.
+# Deploys AntiBotStarter to the infrastructure created by deploy/azure/main.bicep, using OpenID Connect
+# (no secrets stored in GitHub). Prerequisites (once):
+#   - An Entra app registration / user-assigned identity with a federated credential for this repo
+#     (environment "production"), Contributor on the resource group, and membership in the SQL admin group.
+#   - Repository variables: AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID, AZURE_RESOURCE_GROUP,
+#     AZURE_WEBAPP_NAME, AZURE_SQL_SERVER (e.g. sql-xxx.database.windows.net), AZURE_SQL_SERVER_NAME, AZURE_SQL_DATABASE.
+name: Deploy
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Tests (server, including containers)
+        env:
+          ABS_REQUIRE_CONTAINERS: "1"
+        run: dotnet test AntiBotStarter.slnx -c Release
+
+      - name: Publish (includes the Angular production build)
+        run: |
+          (cd src/antibotstarter.client && npm ci)
+          dotnet publish src/AntiBotStarter.Server -c Release -o publish
+          (cd publish && zip -qr ../app.zip .)
+
+      - name: Build the migration bundle
+        run: |
+          dotnet tool restore
+          dotnet ef migrations bundle -p src/AntiBotStarter.Infrastructure -s src/AntiBotStarter.Server -o efbundle --self-contained -r linux-x64
+
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Apply migrations (temporary firewall rule for this runner only)
+        run: |
+          IP=$(curl -s https://api.ipify.org)
+          az sql server firewall-rule create -g "${{ vars.AZURE_RESOURCE_GROUP }}" -s "${{ vars.AZURE_SQL_SERVER_NAME }}" -n gh-runner --start-ip-address "$IP" --end-ip-address "$IP"
+          trap 'az sql server firewall-rule delete -g "${{ vars.AZURE_RESOURCE_GROUP }}" -s "${{ vars.AZURE_SQL_SERVER_NAME }}" -n gh-runner' EXIT
+          ./efbundle --connection "Server=tcp:${{ vars.AZURE_SQL_SERVER }},1433;Database=${{ vars.AZURE_SQL_DATABASE }};Authentication=Active Directory Default;Encrypt=True;"
+
+      - name: Deploy the app
+        run: az webapp deploy -g "${{ vars.AZURE_RESOURCE_GROUP }}" -n "${{ vars.AZURE_WEBAPP_NAME }}" --src-path app.zip --type zip

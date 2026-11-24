@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  SAMPLE for IIS. Rename it to web.config in the published folder (or merge it with the one dotnet publish generates).
+  REQUIREMENT: install the IIS feature "IP and Domain Restrictions" (Web Server > Security).
+  Without it, the <dynamicIpSecurity> section causes an HTTP 500.19 error.
+-->
+<configuration>
+  <location path="." inheritInChildApplications="false">
+    <system.webServer>
+      <handlers>
+        <add name="aspNetCore" path="*" verb="*" modules="AspNetCoreModuleV2" resourceType="Unspecified" />
+      </handlers>
+      <aspNetCore processPath="dotnet" arguments=".\AntiBotStarter.Server.dll" stdoutLogEnabled="false" hostingModel="inprocess" />
+
+      <security>
+        <!-- IIS-level rate limiting (before reaching .NET) -->
+        <dynamicIpSecurity denyAction="Forbidden" enableProxyMode="true">
+          <denyByConcurrentRequests enabled="true" maxConcurrentRequests="20" />
+          <denyByRequestRate enabled="true" maxRequests="60" requestIntervalInMilliseconds="2000" />
+        </dynamicIpSecurity>
+
+        <requestFiltering removeServerHeader="true" allowDoubleEscaping="false">
+          <requestLimits maxAllowedContentLength="1048576" maxUrl="4096" maxQueryString="2048" />
+          <verbs allowUnlisted="false">
+            <add verb="GET" allowed="true" />
+            <add verb="POST" allowed="true" />
+            <add verb="HEAD" allowed="true" />
+          </verbs>
+          <hiddenSegments>
+            <add segment=".git" />
+            <add segment="appsettings.json" />
+          </hiddenSegments>
+        </requestFiltering>
+      </security>
+
+      <httpProtocol>
+        <customHeaders>
+          <remove name="X-Powered-By" />
+        </customHeaders>
+      </httpProtocol>
+    </system.webServer>
+  </location>
+</configuration>
